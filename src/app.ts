@@ -2,12 +2,14 @@ import express from 'express'
 import prisma from './config/prisma'
 import checkJwt from './middlewares/auth'
 import productosRouter from './modules/productos/productos.router'
+import ventasRouter from './modules/ventas/ventas.router'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())
 app.use('/emprendimientos', productosRouter)
+app.use('/emprendimientos', ventasRouter)
 
 // Ruta pública
 app.get('/health', async (req, res) => {
