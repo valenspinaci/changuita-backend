@@ -1,0 +1,493 @@
+// ============================================================
+// Changuita - Prisma Schema
+// Motor: MySQL (RNF-002) | ORM: Prisma (RNF-003)
+// Generado desde DER Conceptual Final
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// AUTH & USUARIOS
+// Auth0 maneja la autenticación (RNF-009).
+// Esta tabla almacena el perfil local vinculado al sub de Auth0.
+// ============================================================
+
+model Usuario {
+  id          Int      @id @default(autoincrement())
+  auth0Id     String   @unique @map("auth0_id") // sub de Auth0
+  email       String   @unique
+  nombre      String
+  avatarUrl   String?  @map("avatar_url")
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  miembros    MiembroEmprendimiento[]
+
+  @@map("usuario")
+}
+
+// ============================================================
+// MÓDULOS Y CONFIGURACIÓN
+// ============================================================
+
+model Modulo {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  activo      Boolean  @default(true)
+
+  configuraciones ConfiguracionModulo[]
+
+  @@map("modulo")
+}
+
+model ConfiguracionModulo {
+  id                Int      @id @default(autoincrement())
+  emprendimientoId  Int      @map("emprendimiento_id")
+  moduloId          Int      @map("modulo_id")
+  habilitado        Boolean  @default(true)
+  creadoEn          DateTime @default(now()) @map("creado_en")
+
+  emprendimiento    Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  modulo            Modulo         @relation(fields: [moduloId], references: [id])
+
+  @@unique([emprendimientoId, moduloId])
+  @@map("configuracion_modulo")
+}
+
+// ============================================================
+// EMPRENDIMIENTO
+// ============================================================
+
+model Emprendimiento {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  logoUrl       String?  @map("logo_url")
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  miembros                  MiembroEmprendimiento[]
+  suscripcion               Suscripcion?
+  productos                 Producto[]
+  clientes                  Cliente[]
+  ventas                    Venta[]
+  gastos                    Gasto[]
+  gastosRecurrentes         GastoRecurrente[]
+  pedidos                   Pedido[]
+  proveedores               Proveedor[]
+  categoriasProducto        CategoriaProducto[]
+  categoriasGasto           CategoriaGasto[]
+  emprendimientoIntegracion EmprendimientoIntegracion[]
+  configuracionesModulo     ConfiguracionModulo[]
+  mediosPago                MedioPago[]
+
+  @@map("emprendimiento")
+}
+
+// ============================================================
+// ROLES (RBAC - RNF-008)
+// ============================================================
+
+enum RolEmprendimiento {
+  OWNER
+  ADMIN
+  OPERADOR
+  VISUALIZADOR
+}
+
+model MiembroEmprendimiento {
+  id               Int               @id @default(autoincrement())
+  usuarioId        Int               @map("usuario_id")
+  emprendimientoId Int               @map("emprendimiento_id")
+  rol              RolEmprendimiento @default(OPERADOR)
+  creadoEn         DateTime          @default(now()) @map("creado_en")
+
+  usuario        Usuario        @relation(fields: [usuarioId], references: [id])
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  notificaciones Notificacion[]
+
+  @@unique([usuarioId, emprendimientoId])
+  @@map("miembro_emprendimiento")
+}
+
+// ============================================================
+// PLANES Y SUSCRIPCIONES
+// ============================================================
+
+model Plan {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  precio      Decimal  @db.Decimal(10, 2)
+  activo      Boolean  @default(true)
+
+  suscripciones     Suscripcion[]
+  planIntegraciones PlanIntegracion[]
+
+  @@map("plan")
+}
+
+enum EstadoSuscripcion {
+  ACTIVA
+  VENCIDA
+  CANCELADA
+  PRUEBA
+}
+
+model Suscripcion {
+  id               Int               @id @default(autoincrement())
+  emprendimientoId Int               @unique @map("emprendimiento_id")
+  planId           Int               @map("plan_id")
+  estado           EstadoSuscripcion @default(PRUEBA)
+  fechaInicio      DateTime          @map("fecha_inicio")
+  fechaFin         DateTime?         @map("fecha_fin")
+  creadoEn         DateTime          @default(now()) @map("creado_en")
+
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  plan           Plan           @relation(fields: [planId], references: [id])
+
+  @@map("suscripcion")
+}
+
+// ============================================================
+// INTEGRACIONES (TiendaNube, MercadoLibre, WhatsApp, etc.)
+// ============================================================
+
+model Integracion {
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique  // "tiendanube" | "mercadolibre" | "whatsapp"
+  descripcion String?
+  logoUrl     String? @map("logo_url")
+  activa      Boolean @default(true)
+
+  planIntegraciones         PlanIntegracion[]
+  emprendimientoIntegracion EmprendimientoIntegracion[]
+
+  @@map("integracion")
+}
+
+model PlanIntegracion {
+  id            Int @id @default(autoincrement())
+  planId        Int @map("plan_id")
+  integracionId Int @map("integracion_id")
+
+  plan        Plan        @relation(fields: [planId], references: [id])
+  integracion Integracion @relation(fields: [integracionId], references: [id])
+
+  @@unique([planId, integracionId])
+  @@map("plan_integracion")
+}
+
+model EmprendimientoIntegracion {
+  id               Int      @id @default(autoincrement())
+  emprendimientoId Int      @map("emprendimiento_id")
+  integracionId    Int      @map("integracion_id")
+  accessToken      String?  @map("access_token") // cifrado en app
+  refreshToken     String?  @map("refresh_token")
+  externalShopId   String?  @map("external_shop_id")
+  activa           Boolean  @default(true)
+  creadoEn         DateTime @default(now()) @map("creado_en")
+
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  integracion    Integracion    @relation(fields: [integracionId], references: [id])
+
+  @@unique([emprendimientoId, integracionId])
+  @@map("emprendimiento_integracion")
+}
+
+// ============================================================
+// PRODUCTOS
+// ============================================================
+
+model CategoriaProducto {
+  id               Int     @id @default(autoincrement())
+  emprendimientoId Int     @map("emprendimiento_id")
+  nombre           String
+  descripcion      String?
+
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  productos      Producto[]
+
+  @@unique([emprendimientoId, nombre])
+  @@map("categoria_producto")
+}
+
+model Producto {
+  id               Int      @id @default(autoincrement())
+  emprendimientoId Int      @map("emprendimiento_id")
+  categoriaId      Int?     @map("categoria_id")
+  nombre           String
+  descripcion      String?
+  precio           Decimal  @db.Decimal(10, 2)
+  stockTotal       Int      @default(0) @map("stock_total")
+  stockMinimo      Int      @default(0) @map("stock_minimo")
+  imagenUrl        String?  @map("imagen_url")
+  activo           Boolean  @default(true)
+  creadoEn         DateTime @default(now()) @map("creado_en")
+  actualizadoEn    DateTime @updatedAt @map("actualizado_en")
+
+  emprendimiento Emprendimiento     @relation(fields: [emprendimientoId], references: [id])
+  categoria      CategoriaProducto? @relation(fields: [categoriaId], references: [id])
+  variantes      VarianteProducto[]
+
+  @@map("producto")
+}
+
+model VarianteProducto {
+  id         Int     @id @default(autoincrement())
+  productoId Int     @map("producto_id")
+  nombre     String  // ej: "Talle M - Rojo"
+  sku        String?
+  precio     Decimal? @db.Decimal(10, 2)
+  stock      Int      @default(0)
+  activo     Boolean  @default(true)
+
+  producto       Producto       @relation(fields: [productoId], references: [id])
+  detallesVenta  DetalleVenta[]
+  detallesPedido DetallePedido[]
+
+  @@map("variante_producto")
+}
+
+// ============================================================
+// CLIENTES
+// ============================================================
+
+model Cliente {
+  id               Int      @id @default(autoincrement())
+  emprendimientoId Int      @map("emprendimiento_id")
+  nombre           String
+  email            String?
+  telefono         String?
+  direccion        String?
+  notas            String?
+  creadoEn         DateTime @default(now()) @map("creado_en")
+  actualizadoEn    DateTime @updatedAt @map("actualizado_en")
+
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  ventas         Venta[]
+  pedidos        Pedido[]
+
+  @@map("cliente")
+}
+
+// ============================================================
+// PROVEEDORES
+// ============================================================
+
+model Proveedor {
+  id               Int     @id @default(autoincrement())
+  emprendimientoId Int     @map("emprendimiento_id")
+  nombre           String
+  contacto         String?
+  email            String?
+  telefono         String?
+  notas            String?
+
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  gastos         Gasto[]
+
+  @@map("proveedor")
+}
+
+// ============================================================
+// VENTAS
+// ============================================================
+
+model MedioPago {
+  id               Int     @id @default(autoincrement())
+  emprendimientoId Int?    @map("emprendimiento_id") // NULL = global del sistema, con valor = personalizado del emprendedor
+  nombre           String
+  activo           Boolean @default(true)
+
+  emprendimiento Emprendimiento? @relation(fields: [emprendimientoId], references: [id])
+  ventas         Venta[]
+
+  @@map("medio_pago")
+}
+
+enum EstadoVenta {
+  PENDIENTE
+  COBRADA
+  CANCELADA
+  DEVUELTA
+}
+
+model Venta {
+  id               Int         @id @default(autoincrement())
+  emprendimientoId Int         @map("emprendimiento_id")
+  clienteId        Int?        @map("cliente_id")
+  medioPagoId      Int?        @map("medio_pago_id")
+  pedidoId         Int?        @unique @map("pedido_id")
+  estado           EstadoVenta @default(PENDIENTE)
+  total            Decimal     @db.Decimal(10, 2)
+  descuento        Decimal     @default(0) @db.Decimal(10, 2)
+  origenExterno    String?     @map("origen_externo") // "tiendanube" | "mercadolibre" | "whatsapp"
+  externalId       String?     @map("external_id")   // ID en la plataforma externa
+  fecha            DateTime    @default(now())
+  notas            String?
+  creadoEn         DateTime    @default(now()) @map("creado_en")
+
+  emprendimiento Emprendimiento @relation(fields: [emprendimientoId], references: [id])
+  cliente        Cliente?       @relation(fields: [clienteId], references: [id])
+  medioPago      MedioPago?     @relation(fields: [medioPagoId], references: [id])
+  pedido         Pedido?        @relation(fields: [pedidoId], references: [id])
+  detalles       DetalleVenta[]
+
+  @@map("venta")
+}
+
+model DetalleVenta {
+  id               Int     @id @default(autoincrement())
+  ventaId          Int     @map("venta_id")
+  varianteId       Int     @map("variante_id")
+  cantidad         Int
+  precioUnitario   Decimal @map("precio_unitario") @db.Decimal(10, 2)
+
+  venta    Venta            @relation(fields: [ventaId], references: [id])
+  variante VarianteProducto @relation(fields: [varianteId], references: [id])
+
+  @@map("detalle_venta")
+}
+
+// ============================================================
+// PEDIDOS
+// ============================================================
+
+enum EstadoPedido {
+  PENDIENTE
+  ACTIVO
+  ENTREGADO
+  CANCELADO
+}
+
+model Pedido {
+  id               Int          @id @default(autoincrement())
+  emprendimientoId Int          @map("emprendimiento_id")
+  clienteId        Int?         @map("cliente_id")
+  estado           EstadoPedido @default(PENDIENTE)
+  fechaEstimada    DateTime?    @map("fecha_estimada")
+  notas            String?
+  creadoEn         DateTime     @default(now()) @map("creado_en")
+  actualizadoEn    DateTime     @updatedAt @map("actualizado_en")
+
+  emprendimiento Emprendimiento  @relation(fields: [emprendimientoId], references: [id])
+  cliente        Cliente?        @relation(fields: [clienteId], references: [id])
+  detalles       DetallePedido[]
+  venta          Venta?
+
+  @@map("pedido")
+}
+
+model DetallePedido {
+  id             Int     @id @default(autoincrement())
+  pedidoId       Int     @map("pedido_id")
+  varianteId     Int     @map("variante_id")
+  cantidad       Int
+  precioUnitario Decimal @map("precio_unitario") @db.Decimal(10, 2)
+
+  pedido   Pedido           @relation(fields: [pedidoId], references: [id])
+  variante VarianteProducto @relation(fields: [varianteId], references: [id])
+
+  @@map("detalle_pedido")
+}
+
+// ============================================================
+// GASTOS
+// ============================================================
+
+model CategoriaGasto {
+  id               Int     @id @default(autoincrement())
+  emprendimientoId Int     @map("emprendimiento_id")
+  nombre           String  // "insumos" | "servicios" | "logística" | etc.
+  descripcion      String?
+
+  emprendimiento   Emprendimiento    @relation(fields: [emprendimientoId], references: [id])
+  gastos           Gasto[]
+  gastosRecurrentes GastoRecurrente[]
+
+  @@unique([emprendimientoId, nombre])
+  @@map("categoria_gasto")
+}
+
+model Gasto {
+  id               Int      @id @default(autoincrement())
+  emprendimientoId Int      @map("emprendimiento_id")
+  categoriaId      Int?     @map("categoria_id")
+  proveedorId      Int?     @map("proveedor_id")
+  gastoRecurrenteId Int?    @map("gasto_recurrente_id")
+  descripcion      String
+  monto            Decimal  @db.Decimal(10, 2)
+  fecha            DateTime @default(now())
+  comprobante      String?  // URL o referencia
+  creadoEn         DateTime @default(now()) @map("creado_en")
+
+  emprendimiento   Emprendimiento   @relation(fields: [emprendimientoId], references: [id])
+  categoria        CategoriaGasto?  @relation(fields: [categoriaId], references: [id])
+  proveedor        Proveedor?       @relation(fields: [proveedorId], references: [id])
+  gastoRecurrente  GastoRecurrente? @relation(fields: [gastoRecurrenteId], references: [id])
+
+  @@map("gasto")
+}
+
+enum FrecuenciaGasto {
+  DIARIO
+  SEMANAL
+  MENSUAL
+  TRIMESTRAL
+  ANUAL
+}
+
+model GastoRecurrente {
+  id               Int             @id @default(autoincrement())
+  emprendimientoId Int             @map("emprendimiento_id")
+  categoriaId      Int?            @map("categoria_id")
+  descripcion      String
+  montoReferencia  Decimal?        @map("monto_referencia") @db.Decimal(10, 2) // referencia, el monto real se ingresa en cada Gasto
+  frecuencia       FrecuenciaGasto
+  proximaFecha     DateTime        @map("proxima_fecha")
+  activo           Boolean         @default(true)
+  creadoEn         DateTime        @default(now()) @map("creado_en")
+
+  emprendimiento Emprendimiento  @relation(fields: [emprendimientoId], references: [id])
+  categoria      CategoriaGasto? @relation(fields: [categoriaId], references: [id])
+  gastos         Gasto[]
+
+  @@map("gasto_recurrente")
+}
+
+// ============================================================
+// NOTIFICACIONES
+// ============================================================
+
+enum TipoNotificacion {
+  STOCK_MINIMO
+  PAGO_PENDIENTE
+  PEDIDO_NUEVO
+  VENTA_REGISTRADA
+  SUSCRIPCION_POR_VENCER
+  GASTO_RECURRENTE
+  SISTEMA
+}
+
+model Notificacion {
+  id        Int              @id @default(autoincrement())
+  miembroId Int              @map("miembro_id")
+  tipo      TipoNotificacion
+  titulo    String
+  cuerpo    String
+  leida     Boolean          @default(false)
+  creadoEn  DateTime         @default(now()) @map("creado_en")
+
+  miembro MiembroEmprendimiento @relation(fields: [miembroId], references: [id])
+
+  @@map("notificacion")
+}
