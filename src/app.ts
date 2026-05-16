@@ -1,11 +1,13 @@
 import express from 'express'
 import prisma from './config/prisma'
+import checkJwt from './middlewares/auth'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())
 
+// Ruta pública
 app.get('/health', async (req, res) => {
     try {
         await prisma.$queryRaw`SELECT 1`
@@ -13,6 +15,11 @@ app.get('/health', async (req, res) => {
     } catch (error) {
         res.status(500).json({ status: 'error', db: 'desconectada' })
     }
+})
+
+// Ruta protegida de prueba
+app.get('/protegido', checkJwt, (req, res) => {
+    res.json({ mensaje: 'Si ves esto, estás autenticado' })
 })
 
 app.listen(PORT, () => {
