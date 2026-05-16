@@ -4,6 +4,7 @@ import checkJwt from './middlewares/auth'
 import productosRouter from './modules/productos/productos.router'
 import ventasRouter from './modules/ventas/ventas.router'
 import clientesRouter from './modules/clientes/clientes.router'
+import pedidosRouter from './modules/pedidos/pedidos.router'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -12,6 +13,7 @@ app.use(express.json())
 app.use('/emprendimientos', productosRouter)
 app.use('/emprendimientos', ventasRouter)
 app.use('/emprendimientos', clientesRouter)
+app.use('/emprendimientos', pedidosRouter)
 
 // Ruta pública
 app.get('/health', async (req, res) => {
