@@ -6,6 +6,7 @@ import ventasRouter from './modules/ventas/ventas.router'
 import clientesRouter from './modules/clientes/clientes.router'
 import pedidosRouter from './modules/pedidos/pedidos.router'
 import gastosRouter from './modules/gastos/gastos.router'
+import emprendimientosRouter from './modules/emprendimientos/emprendimientos.router'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -16,7 +17,7 @@ app.use('/emprendimientos', ventasRouter)
 app.use('/emprendimientos', clientesRouter)
 app.use('/emprendimientos', pedidosRouter)
 app.use('/emprendimientos', gastosRouter)
-
+app.use('/emprendimientos', emprendimientosRouter)
 // Ruta pública
 app.get('/health', async (req, res) => {
     try {
