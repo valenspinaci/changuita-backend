@@ -47,21 +47,21 @@ export const createVenta = async (data: any, emprendimientoId: number) => {
     }
 
     // 2. Calcular total
-    let total = detalles.reduce((acc: number, d: any) => {
-      return acc + d.precioUnitario * d.cantidad
-    }, 0)
+let total = data.total !== undefined 
+    ? Number(data.total)
+    : detalles.reduce((acc: number, d: any) => acc + d.precioUnitario * d.cantidad, 0)
     total = total - descuento
 
     // 3. Crear la venta
     const venta = await tx.venta.create({
-        data: {
-        emprendimientoId,
-        clienteId,
-        medioPagoId,
-        descuento,
-        notas,
-        total,
-        estado: 'PENDIENTE',
+    data: {
+    emprendimientoId,
+    clienteId,
+    medioPagoId,
+    descuento,
+    notas,
+    total,
+    estado: data.estado || 'PENDIENTE',
         detalles: {
             create: detalles.map((d: any) => ({
             varianteId: d.varianteId,
@@ -95,5 +95,11 @@ export const updateEstadoVenta = async (id: number, estado: string, emprendimien
     return prisma.venta.update({
     where: { id },
     data: { estado: estado as any }
+    })
+}
+
+export const deleteVenta = async (id: number, emprendimientoId: number) => {
+    return prisma.venta.delete({
+        where: { id, emprendimientoId }
     })
 }

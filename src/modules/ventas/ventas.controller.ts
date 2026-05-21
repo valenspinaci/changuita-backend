@@ -45,3 +45,13 @@ export const updateEstadoVenta = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al actualizar estado de venta' })
     }
 }
+
+export const deleteVenta = async (req: Request, res: Response) => {
+    try {
+        const { id, emprendimientoId } = req.params
+        await ventasService.deleteVenta(Number(id), Number(emprendimientoId))
+        res.json({ message: 'Venta eliminada' })
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar venta' })
+    }
+}
