@@ -7,9 +7,15 @@ import clientesRouter from './modules/clientes/clientes.router'
 import pedidosRouter from './modules/pedidos/pedidos.router'
 import gastosRouter from './modules/gastos/gastos.router'
 import emprendimientosRouter from './modules/emprendimientos/emprendimientos.router'
+import cors from 'cors'
 
 const app = express()
 const PORT = process.env.PORT || 3000
+
+app.use(cors({
+    origin: ['http://localhost:3002', 'http://localhost:3000'],
+    credentials: true,
+}))
 
 app.use(express.json())
 app.use('/emprendimientos', productosRouter)
