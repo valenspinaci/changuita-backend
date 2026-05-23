@@ -34,11 +34,12 @@ export const createCliente = async (req: Request, res: Response) => {
 
 export const updateCliente = async (req: Request, res: Response) => {
     try {
-    const { id } = req.params
-    const cliente = await clientesService.updateCliente(Number(id), req.body)
-    res.json(cliente)
+        const { id, emprendimientoId } = req.params
+        const cliente = await clientesService.updateCliente(Number(id), Number(emprendimientoId), req.body)
+        res.json(cliente)
     } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar cliente' })
+        console.error('Error updateCliente:', error)
+        res.status(500).json({ error: 'Error al actualizar cliente' })
     }
 }
 
