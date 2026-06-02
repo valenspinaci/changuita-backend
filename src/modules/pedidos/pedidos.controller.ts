@@ -52,3 +52,14 @@ export const deletePedido = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al cancelar pedido' })
     }
 }
+
+export const updatePedido = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+        const { notas, fechaEstimada, clienteId } = req.body
+        const pedido = await pedidosService.updatePedido(Number(id), { notas, fechaEstimada, clienteId })
+        res.json(pedido)
+    } catch (error) {
+        res.status(500).json({ error: 'Error al actualizar pedido' })
+    }
+}

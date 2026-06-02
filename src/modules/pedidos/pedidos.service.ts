@@ -61,3 +61,15 @@ export const deletePedido = async (id: number) => {
     data: { estado: 'CANCELADO' }
     })
 }
+
+export const updatePedido = async (id: number, data: any) => {
+    return prisma.pedido.update({
+        where: { id },
+        data: {
+        notas: data.notas,
+        fechaEstimada: data.fechaEstimada,
+        clienteId: data.clienteId,
+        },
+        include: { cliente: true, detalles: true }
+    })
+}

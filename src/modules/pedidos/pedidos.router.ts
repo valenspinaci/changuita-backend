@@ -9,5 +9,6 @@ router.get('/:emprendimientoId/pedidos/:id', checkJwt, pedidosController.getPedi
 router.post('/:emprendimientoId/pedidos', checkJwt, pedidosController.createPedido)
 router.patch('/:emprendimientoId/pedidos/:id/estado', checkJwt, pedidosController.updateEstadoPedido)
 router.delete('/:emprendimientoId/pedidos/:id', checkJwt, pedidosController.deletePedido)
+router.put('/:emprendimientoId/pedidos/:id', checkJwt, pedidosController.updatePedido)
 
 export default router
