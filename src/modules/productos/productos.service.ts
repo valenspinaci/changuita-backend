@@ -37,3 +37,10 @@ export const deleteProducto = async (id: number, emprendimientoId: number) => {
         data: { activo: false }
 })
 }
+
+export const descontarStock = async (productoId: number, cantidad: number) => {
+    return prisma.producto.update({
+        where: { id: productoId },
+        data: { stockTotal: { decrement: cantidad } }
+    })
+}

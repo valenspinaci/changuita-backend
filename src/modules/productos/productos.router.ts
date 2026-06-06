@@ -13,5 +13,6 @@ router.delete('/:emprendimientoId/productos/:id', checkJwt, productosController.
 router.get('/:emprendimientoId/categorias-producto', checkJwt, categoriasController.getCategorias)
 router.post('/:emprendimientoId/categorias-producto', checkJwt, categoriasController.createCategoria)
 router.delete('/:emprendimientoId/categorias-producto/:id', checkJwt, categoriasController.deleteCategoria)
+router.patch('/:emprendimientoId/productos/:id/stock', checkJwt, productosController.descontarStock)
 
 export default router

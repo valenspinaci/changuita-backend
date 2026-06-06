@@ -51,3 +51,14 @@ export const deleteProducto = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Error al eliminar producto' })
     }
 }
+
+export const descontarStock = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+        const { cantidad } = req.body
+        const producto = await productosService.descontarStock(Number(id), Number(cantidad))
+        res.json(producto)
+    } catch (error) {
+        res.status(500).json({ error: 'Error al descontar stock' })
+    }
+}
