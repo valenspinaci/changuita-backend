@@ -29,6 +29,7 @@ export const createVenta = async (req: Request, res: Response) => {
     res.status(201).json(venta)
     } catch (error: any) {
     if (error.message.includes('Stock insuficiente')) {
+        console.error('Error crear venta:', error)
         return res.status(400).json({ error: error.message })
     }
     res.status(500).json({ error: 'Error al crear venta' })

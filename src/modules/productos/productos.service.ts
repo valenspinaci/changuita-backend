@@ -3,8 +3,7 @@ import prisma from '../../config/prisma'
 export const getProductos = async (emprendimientoId: number) => {
     return prisma.producto.findMany({
         where: { emprendimientoId, activo: true },
-        include: { categoria: true, variantes: true },
-        orderBy: { creadoEn: 'desc' }
+        include: { variantes: true }
     })
 }
 
@@ -16,12 +15,25 @@ export const getProductoById = async (id: number, emprendimientoId: number) => {
 }
 
 export const createProducto = async (data: any, emprendimientoId: number) => {
-    return prisma.producto.create({
-    data: {
-        ...data,
-        emprendimientoId
-    }
-})
+    const producto = await prisma.producto.create({
+        data: {
+            ...data,
+            emprendimientoId
+        }
+    })
+
+    // Crear variante por defecto
+    await prisma.varianteProducto.create({
+        data: {
+            productoId: producto.id,
+            nombre: 'Por defecto',
+            precio: data.precio,
+            stock: data.stockTotal ?? 0,
+            activo: true,
+        }
+    })
+
+    return producto
 }
 
 export const updateProducto = async (id: number, data: any, emprendimientoId: number) => {
