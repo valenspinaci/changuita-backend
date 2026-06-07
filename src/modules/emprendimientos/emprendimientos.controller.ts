@@ -14,11 +14,15 @@ export const getMisEmprendimientos = async (req: Request, res: Response) => {
 export const crearEmprendimiento = async (req: Request, res: Response) => {
     try {
         const auth0Id = req.auth?.payload?.sub as string
-        const { nombre, descripcion } = req.body
-        if (!nombre) return res.status(400).json({ error: 'El nombre es requerido' })
-        const emprendimiento = await crearEmprendimientoService(auth0Id, { nombre, descripcion })
+const email = req.auth?.payload?.email as string ?? ''
+const nombre = req.auth?.payload?.name as string ?? ''
+console.log('payload completo:', JSON.stringify(req.auth?.payload))
+        const { nombre: nombreEmprendimiento, descripcion } = req.body
+        if (!nombreEmprendimiento) return res.status(400).json({ error: 'El nombre es requerido' })
+        const emprendimiento = await crearEmprendimientoService(auth0Id, email, nombre, { nombre: nombreEmprendimiento, descripcion })
         res.status(201).json(emprendimiento)
     } catch (error) {
+        console.error('Error al crear emprendimiento:', error)
         res.status(500).json({ error: 'Error al crear emprendimiento' })
     }
 }

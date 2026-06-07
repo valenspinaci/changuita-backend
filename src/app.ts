@@ -7,6 +7,7 @@ import clientesRouter from './modules/clientes/clientes.router'
 import pedidosRouter from './modules/pedidos/pedidos.router'
 import gastosRouter from './modules/gastos/gastos.router'
 import emprendimientosRouter from './modules/emprendimientos/emprendimientos.router'
+import authRouter from './modules/auth/auth.router'
 import cors from 'cors'
 
 const app = express()
@@ -24,6 +25,7 @@ app.use('/emprendimientos', clientesRouter)
 app.use('/emprendimientos', pedidosRouter)
 app.use('/emprendimientos', gastosRouter)
 app.use('/emprendimientos', emprendimientosRouter)
+app.use('/auth', authRouter)
 // Ruta pública
 app.get('/health', async (req, res) => {
     try {

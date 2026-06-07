@@ -20,19 +20,24 @@ export const getMisEmprendimientosService = async (auth0Id: string) => {
     })
 }
 
-export const crearEmprendimientoService = async (auth0Id: string, data: { nombre: string, descripcion?: string }) => {
-    // Primero buscamos o creamos el usuario
-    console.log('auth0Id recibido:', auth0Id)
-    const usuario = await prisma.usuario.upsert({
-        where: { auth0Id },
-        update: {},
-        create: {
-            auth0Id,
-            email: '',   // se actualiza después con el perfil real
-            nombre: '',
-        }
-    })
-
+export const crearEmprendimientoService = async (
+    auth0Id: string,
+    email: string,
+    nombre: string,
+    data: { nombre: string, descripcion?: string }
+) => {
+const usuario = await prisma.usuario.upsert({
+    where: { auth0Id },
+    update: { 
+        ...(email ? { email } : {}),
+        ...(nombre ? { nombre } : {})
+    },
+    create: { 
+        auth0Id, 
+        email: email || auth0Id,
+        nombre: nombre || ''
+    }
+})
     return prisma.emprendimiento.create({
         data: {
             nombre: data.nombre,
