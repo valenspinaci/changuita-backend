@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { upsertUsuario } from '../../utils/upsertUsuario'
 
 const prisma = new PrismaClient()
 
@@ -26,18 +27,7 @@ export const crearEmprendimientoService = async (
     nombre: string,
     data: { nombre: string, descripcion?: string }
 ) => {
-const usuario = await prisma.usuario.upsert({
-    where: { auth0Id },
-    update: { 
-        ...(email ? { email } : {}),
-        ...(nombre ? { nombre } : {})
-    },
-    create: { 
-        auth0Id, 
-        email: email || auth0Id,
-        nombre: nombre || ''
-    }
-})
+const usuario = await upsertUsuario(auth0Id, email, nombre)
     return prisma.emprendimiento.create({
         data: {
             nombre: data.nombre,
