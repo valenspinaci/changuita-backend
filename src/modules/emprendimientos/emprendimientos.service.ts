@@ -52,3 +52,21 @@ export const getEmprendimientoService = async (auth0Id: string, id: number) => {
         }
     })
 }
+
+export const actualizarEmprendimientoService = async (
+    auth0Id: string,
+    id: number,
+    data: { nombre?: string, descripcion?: string }
+) => {
+    const emprendimiento = await prisma.emprendimiento.findFirst({
+        where: { id, miembros: { some: { usuario: { auth0Id } } } }
+    })
+    if (!emprendimiento) return null
+    return prisma.emprendimiento.update({
+        where: { id },
+        data: {
+            ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
+            ...(data.descripcion !== undefined ? { descripcion: data.descripcion } : {}),
+        }
+    })
+}
