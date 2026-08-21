@@ -18,6 +18,20 @@ export const syncUser = async (req: Request, res: Response) => {
     }
 }
 
+export const completarOnboarding = async (req: Request, res: Response) => {
+    try {
+        const auth0Id = req.auth?.payload?.sub as string
+        const usuario = await prisma.usuario.update({
+            where: { auth0Id },
+            data: { onboardingCompletado: true }
+        })
+        res.json(usuario)
+    } catch (error) {
+        console.error('Error al completar onboarding:', error)
+        res.status(500).json({ error: 'Error al completar onboarding' })
+    }
+}
+
 export const updateProfile = async (req: Request, res: Response) => {
     try {
         const auth0Id = req.auth?.payload?.sub as string

@@ -26,6 +26,7 @@ model Usuario {
   email       String   @unique
   nombre      String
   avatarUrl   String?  @map("avatar_url")
+  onboardingCompletado Boolean @default(false) @map("onboarding_completado")
   creadoEn    DateTime @default(now()) @map("creado_en")
   actualizadoEn DateTime @updatedAt @map("actualizado_en")
 
